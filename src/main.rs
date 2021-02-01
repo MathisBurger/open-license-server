@@ -15,6 +15,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Cors::new().supports_credentials().finish())
             .route("/", web::get().to(controller::default_controller::response))
             .route("/activate-product", web::get().to(controller::activate_product_controller::response))
+            .service(controller::check_status_websocket::response)
     })
         .bind("0.0.0.0:".to_owned() + &dotenv_handler::load_param("APPLICATION_PORT"))?
         .run()

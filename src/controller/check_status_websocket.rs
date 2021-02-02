@@ -29,7 +29,7 @@ pub async fn response(ws: WebSocket) -> impl Responder {
                       tx.text(serde_json::to_string(&Session::update_session_token(&el).await).unwrap())
                     } else {
                         tx.text(serde_json::to_string(&Session::empty_session()).unwrap())
-                    };
+                    }
 
                 },
                 Message::Close(reason) => {

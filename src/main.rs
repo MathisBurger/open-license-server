@@ -17,6 +17,7 @@ async fn main() -> std::io::Result<()> {
             .route("/activate-product", web::get().to(controller::activate_product_controller::response))
             .service(controller::check_status_websocket::response)
             .route("/close-session", web::get().to(controller::close_session_controller::response))
+            .route("/generate-product-key", web::get().to(controller::generate_key_controller::response))
     })
         .bind("0.0.0.0:".to_owned() + &dotenv_handler::load_param("APPLICATION_PORT"))?
         .run()

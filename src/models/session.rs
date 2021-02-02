@@ -74,7 +74,7 @@ impl Session {
     }
 
 
-    fn generate_session_cryptography(len: usize) -> String {
+    pub fn generate_session_cryptography(len: usize) -> String {
         let random: String = thread_rng()
             .sample_iter(&Alphanumeric)
             .take(len)

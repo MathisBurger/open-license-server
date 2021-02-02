@@ -5,7 +5,7 @@ use crate::mysql;
 use crate::dotenv_handler;
 
 #[derive(Deserialize)]
-pub struct GenerateKeyRequest {
+pub struct AddProductRequest {
     name: String,
     information: String,
     licensed_by: String,
@@ -21,7 +21,7 @@ struct ResponseModel {
 }
 
 
-pub async fn response(info: web::Query<GenerateKeyRequest>) -> impl Responder {
+pub async fn response(info: web::Query<AddProductRequest>) -> impl Responder {
     if &info.secret != &dotenv_handler::load_param("ADMIN_SECRET") {
         return web::HttpResponse::Ok()
             .json(ResponseModel {

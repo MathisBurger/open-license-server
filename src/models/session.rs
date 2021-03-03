@@ -6,7 +6,7 @@ use std::fs::read;
 use std::borrow::Borrow;
 use serde::{Serialize, Deserialize};
 
-
+// session struct
 #[derive(Serialize, Deserialize)]
 pub struct Session {
     product_key: String,
@@ -15,24 +15,38 @@ pub struct Session {
 }
 
 impl Session {
+
+    // check if session with key exists
     pub async fn exists_for_key(key: &String) -> bool {
+
         let conn = mysql::get_connection().await.unwrap();
+
+        // get all values
         let sessions = query_as!(Session, "SELECT `product_key`, `session_key`, `session_token` FROM `sessions` WHERE `product_key`=?", key)
             .fetch_all(&conn).await;
+
         conn.close();
+
         if sessions.is_err() {
             return false;
         }
         return sessions.unwrap().len() > 0;
     }
 
+    // creates session with key
     pub async fn create_session(key: &String) -> Self {
+
         let conn = mysql::get_connection().await.unwrap();
+
         let session_key = Self::generate_session_cryptography(64);
         let session_token = Self::generate_session_cryptography(32);
+
+        // insert session
         query!("INSERT INTO `sessions` (`id`, `product_key`, `session_key`, `session_token`) VALUES (NULL, ?, ?, ?);", key, session_key, session_token)
             .execute(&conn).await.unwrap();
+
         conn.close();
+
         return Session{
             product_key: key.clone(),
             session_key,
@@ -40,9 +54,14 @@ impl Session {
         }
     }
 
+    // updates session token
     pub async fn update_session_token(old: &Self) -> Self {
+
         let conn = mysql::get_connection().await.unwrap();
+
         let new_token = Self::generate_session_cryptography(32);
+
+        // check old token
         let exists = query_as!(Self, "SELECT `product_key`, `session_key`, `session_token` FROM `sessions` WHERE `product_key`=? AND `session_key`=? AND `session_token`=?;",
                               &old.product_key, &old.session_key, &old.session_token)
             .fetch_all(&conn).await.unwrap();
@@ -50,13 +69,18 @@ impl Session {
             conn.close();
             return Self::empty_session();
         }
+
+        // update session with new token
         query!("UPDATE `sessions` SET `session_token`=? WHERE `product_key`=? AND `session_key`=? AND `session_token`=?;",
               new_token, &old.product_key, &old.session_key, &old.session_token)
             .execute(&conn).await.unwrap();
+
         conn.close();
+
         return Self::new(&old.product_key, &old.session_key, &new_token);
     }
 
+    // generates session instance
     pub fn new(product_key: &String, session_key: &String, session_token: &String) -> Self {
         return Session {
             product_key: product_key.clone(),
@@ -65,6 +89,7 @@ impl Session {
         };
     }
 
+    // generates "empty" session instance
     pub fn empty_session() -> Self {
         return Session {
             product_key: "null".to_string(),
@@ -73,7 +98,7 @@ impl Session {
         }
     }
 
-
+    // generates random string
     pub fn generate_session_cryptography(len: usize) -> String {
         let random: String = thread_rng()
             .sample_iter(&Alphanumeric)

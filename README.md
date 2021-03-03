@@ -4,5 +4,7 @@ I finished it and it will not be developed in future.
 It is not made for use in production. 
 I made it to use it as a backend for some tiny license-based projects.
 Its perfect for closed-beta versions of games or other small applications.
-The API is easy to use and in future I will add some wrapper for different languages 
-like golang, rust, c#, python, java and other.
+
+## Installation
+Therefore I do not recommend to use it in production, I will not show you how to install it correctly.
+If you want to try it, you can figure it out yourself :)

@@ -5,6 +5,7 @@ use crate::mysql;
 use crate::dotenv_handler;
 use crate::models::session::Session;
 
+
 #[derive(Deserialize)]
 pub struct GenerateKeyRequest {
     secret: String,
@@ -34,7 +35,10 @@ struct ProductID {
     id: i32
 }
 
+// controller
 pub async fn response(info: web::Query<GenerateKeyRequest>) -> impl Responder {
+
+    // check if secret is correct
     if &info.secret != &dotenv_handler::load_param("ADMIN_SECRET") {
         return web::HttpResponse::Ok()
             .json(ResponseModel {
@@ -45,11 +49,16 @@ pub async fn response(info: web::Query<GenerateKeyRequest>) -> impl Responder {
                 key: "null".to_string()
             });
     }
+
+    // generates new unique key
     let conn = mysql::get_connection().await.unwrap();
     let product_id: ProductID = query_as!(ProductID, "SELECT `id` FROM `products` WHERE `name`=?", &info.product_name)
         .fetch_one(&conn).await.unwrap();
+
     let mut found = false;
+
     let mut key: String = "null".to_string();
+
     while !found {
         let mut _key = generate_key();
         let st =  query_as!(ProductStruct, "SELECT `id`, `product_key`, `product_id`, `status`, `hardware_ids` FROM `product_keys` WHERE `product_key`=? AND `product_id`=?", _key, &product_id.id)
@@ -59,8 +68,10 @@ pub async fn response(info: web::Query<GenerateKeyRequest>) -> impl Responder {
             found = true;
         }
     }
+
     query!("INSERT INTO `product_keys` (`id`, `product_key`, `product_id`, `status`, `hardware_ids`) VALUES (NULL, ?, ?, 'sleeping', 'null');", &key, &product_id.id)
         .execute(&conn).await.unwrap();
+
     return web::HttpResponse::Ok()
         .json(ResponseModel {
             message: "successfully created new product-key".to_string(),
@@ -71,6 +82,7 @@ pub async fn response(info: web::Query<GenerateKeyRequest>) -> impl Responder {
         })
 }
 
+// key generation util
 fn generate_key() -> String {
     let mut key_parts: String = "".to_string();
     for i in 0..5 {

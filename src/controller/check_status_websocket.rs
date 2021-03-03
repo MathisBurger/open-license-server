@@ -15,12 +15,19 @@ struct ResponseModel {
     session_token: String
 }
 
+// status websocket
 #[get("/check-status")]
 pub async fn response(ws: WebSocket) -> impl Responder {
+
+    // get socket data
     let (mut stream, res, mut tx) = ws.into_parts();
 
+    // create socket connection
     actix_web::rt::spawn(async move {
+
         while let Some(Ok(msg)) = stream.next().await {
+
+            // parse request
             let result = match msg {
                 Message::Text(m) => {
                     let s: Result<Session, serde_json::error::Error> = serde_json::from_str(m.as_str());

@@ -18,11 +18,17 @@ struct ResponseModel {
     http_status: i16,
 }
 
+// controller
 pub async fn response(info: web::Query<CloseSessionRequest>) -> impl Responder {
+
     let conn = mysql::get_connection().await.unwrap();
+
+    // closes session
     let status =  query!("DELETE FROM `sessions` WHERE `product_key`=? AND `session_key`=? AND `session_token`=?", &info.product_key, &info.session_key, &info.session_token)
         .execute(&conn).await.is_ok();
+
     conn.close();
+
     if status {
         return web::HttpResponse::Ok()
             .json(ResponseModel {
